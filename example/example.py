@@ -1,8 +1,10 @@
 from sklearn.tree import DecisionTreeClassifier
+import numpy as np
 
-# [horas_estudadas, nota_simulado]
+def import_data(name_file):
 
-def import_data(name_file, primary_values, values_predict):
+    primary_values = []
+    values_predict = []
 
     with open(name_file, 'r') as file:
         for line in file:
@@ -11,19 +13,21 @@ def import_data(name_file, primary_values, values_predict):
             primary_values.append(values[:-1])
             values_predict.append(values[-1])
 
-def main():
+    print(primary_values)
+    print(values_predict)
 
-    primary_values = []
-    values_predict = []
+    return np.array(primary_values), np.array(values_predict)
+
+def main_example():
     
     name_file = 'data.txt'
-    import_data(name_file, primary_values, values_predict)
+    primary_values, values_predict = import_data(name_file)
 
     model = DecisionTreeClassifier()
     model.fit(primary_values, values_predict)
 
-    resultado = model.predict([[2, 30]])
+    resultado = model.predict([[8, 16, 24]])
     print(resultado)
 
 if __name__ == '__main__':
-    main()
+    main_example()
