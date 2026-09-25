@@ -1,83 +1,68 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
+import numpy as np
+
 from settings import *
+from plots import *
 
-def write_data(name_file, loop, next_x, next_y_pred, real_y):
-    with open(f"mini-project/{name_file}", 'a') as file:
-        file.write(f"Loop: {loop + 1}\n")
-        file.write(f"Próximo x: {next_x}\n")
-        file.write(f"y previsto: {next_y_pred}\n")
-        file.write(f"y real: {real_y}\n")
-        file.write("-" * 30 + "\n")
-
-def black_box(x):
-    return np.sin(x) + 0.3 * np.sin(3*x) + 0.1 * x
+def read_data(name_file):
+    with open(f"mini-project/{name_file}", 'r') as file:
+        pass
 
 def loop_fit_prediction(gp, X, y, X_test):
-    gp.fit(X.reshape(-1,1), y)
+    gp.fit(X, y)
 
     prediction, std = gp.predict(X_test, return_std = True)
 
     return prediction, std
 
+# BLACK BOX
+def black_box(X):
+    # noise = np.random.normal(0, 0.05, np.shape(x))
+    x1 = X[:, 0]
+    x2 = X[:, 1]
+
+    return np.sin(x1) + 0.5 * np.sin(3*x2) + 0.1 * x1 + 0.2 * x2 # + noise
+
 def main():
 
     # Data Initial
-    X = np.array([0, 2, 4, 7, 10])
+    X = np.array([[0, 0], [3, 2], [8, 5], [13, 7], [30, 10]])
     y = black_box(X)
 
     # Gaussian Process
-    kernel = RBF(length_scale = 1.0)
+    kernel = RBF(LENGTH_SCALE)
     gp = GaussianProcessRegressor(kernel = kernel,optimizer = None)
 
     # Data Test
-    X_test = np.linspace(0, 10, 500).reshape(-1, 1)
+    x1 = np.linspace(MIN, MAX, POINTS_NUMBER)
+    x2 = np.linspace(MIN, MAX, POINTS_NUMBER)
+    X1, X2 = np.meshgrid(x1, x2)
+    X_test = np.column_stack([X1.ravel(), X2.ravel()])
 
-    for loop in range(5):
+    # Write Data
+    Y_data = []
+
+    for loop in range(LOOPS):
         prediction, std = loop_fit_prediction(gp, X, y, X_test)
 
+        BETA = 5 * (1 - loop / LOOPS)
         ucb = prediction + BETA * std
         best_index = np.argmax(ucb)
-        next_x = X_test[best_index][0]
-
-        next_x = X_test[best_index][0]
+        next_x = X_test[best_index]
         next_y_pred = prediction[best_index]
-        real_y = black_box(next_x)
+        real_y = black_box(next_x.reshape(1, -1))[0]
 
-        write_data(
-            'data.txt',
-            loop,
-            next_x, 
-            next_y_pred, 
-            real_y
-        )
-
-        X = np.append(X, next_x)
+        X = np.vstack([X, next_x])
         y = np.append(y, real_y)
 
-    plt.xlabel('X')
-    plt.ylabel('Y')
+        Y_data.append(np.max(y))
 
-    plt.plot(
-        X_test, 
-        prediction, 
-        label="GP"
-    )
+    # plot_1(X_test, prediction, std) # Plot 1 by X    
+    plot_2(Y_data) # Plot 2 by Loops
 
-    plt.fill_between(
-        X_test.ravel(), 
-        prediction - 1.96 * std, 
-        prediction + 1.96 * std, 
-        alpha = 0.2, 
-        label="Incerteza"
-    )
-
-    plt.legend()
-    plt.show()
+    show_plots()
 
 if __name__ == '__main__':
     main()
