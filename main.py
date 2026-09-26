@@ -1,5 +1,5 @@
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 
 import numpy as np
 
@@ -19,11 +19,11 @@ def loop_fit_prediction(gp, X, y, X_test):
 
 # BLACK BOX
 def black_box(X):
-    # noise = np.random.normal(0, 0.05, np.shape(x))
     x1 = X[:, 0]
     x2 = X[:, 1]
+    noise = np.random.normal(0, 0.05, np.shape(x1))
 
-    return np.sin(x1) + 0.5 * np.sin(3*x2) + 0.1 * x1 + 0.2 * x2 # + noise
+    return np.sin(x1) + 0.5 * np.sin(3*x2) + 0.1 * x1 + 0.2 * x2 + noise
 
 def main():
 
@@ -32,7 +32,7 @@ def main():
     y = black_box(X)
 
     # Gaussian Process
-    kernel = RBF(LENGTH_SCALE)
+    kernel = RBF(length_scale = LENGTH_SCALE) + WhiteKernel(noise_level = NOISE_LEVEL)
     gp = GaussianProcessRegressor(kernel = kernel,optimizer = None)
 
     # Data Test
