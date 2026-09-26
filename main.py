@@ -4,6 +4,7 @@ from sklearn.gaussian_process.kernels import RBF, WhiteKernel
 import numpy as np
 
 from settings import *
+from database import *
 from plots import *
 
 def read_data(name_file):
@@ -28,7 +29,7 @@ def black_box(X):
 def main():
 
     # Data Initial
-    X = np.array([[0, 0], [3, 2], [8, 5], [13, 7], [30, 10]])
+    X = np.array([[0, 0], [3, 2], [8, 5], [13, 7], [30, 10]]) # = read_data(name_file)
     y = black_box(X)
 
     # Gaussian Process
@@ -47,7 +48,7 @@ def main():
     for loop in range(LOOPS):
         prediction, std = loop_fit_prediction(gp, X, y, X_test)
 
-        BETA = 5 * (1 - loop / LOOPS)
+        BETA = 10 * (1 - loop / LOOPS)
         ucb = prediction + BETA * std
         best_index = np.argmax(ucb)
         next_x = X_test[best_index]
